@@ -1,5 +1,10 @@
 export const API_CONFIG = {
+  CORS_PROXY: 'https://thingproxy.freeboard.io/fetch/',
   BASE_URL: 'http://apidemo.luceed.hr/datasnap/rest',
+  AUTH: {
+    USERNAME: 'luceed_mb',
+    PASSWORD: '7e5y2Uza',
+  },
   ENDPOINTS: {
     ARTICLES: '/artikli/naziv/',
     WAREHOUSES: '/skladista/lista',

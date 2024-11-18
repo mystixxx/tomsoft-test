@@ -3,11 +3,14 @@ import { API_CONFIG } from '../config/apiConfig';
 
 class ApiClient {
   constructor() {
+    const authHeader = 'Basic ' + btoa(`${API_CONFIG.AUTH.USERNAME}:${API_CONFIG.AUTH.PASSWORD}`);
+    
     this.client = axios.create({
-      baseURL: API_CONFIG.BASE_URL,
-      timeout: 10000,
+      timeout: 30000,
       headers: {
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
 
@@ -15,10 +18,13 @@ class ApiClient {
   }
 
   initializeInterceptors() {
-    this.client.interceptors.request.use(
-      this.handleRequest,
-      this.handleRequestError
-    );
+    this.client.interceptors.request.use((config) => {
+      if (!config.url.startsWith('http')) {
+        const targetUrl = API_CONFIG.BASE_URL + config.url;
+        config.url = API_CONFIG.CORS_PROXY + targetUrl;
+      }
+      return config;
+    });
 
     this.client.interceptors.response.use(
       this.handleResponse,
@@ -26,44 +32,13 @@ class ApiClient {
     );
   }
 
-  async handleRequest(config) {
-    try {
-      const auth = {
-        username: process.env.REACT_APP_API_USERNAME,
-        password: process.env.REACT_APP_API_PASSWORD
-      };
-      
-      const basicAuth = btoa(`${auth.username}:${auth.password}`);
-      config.headers.Authorization = `Basic ${basicAuth}`;
-      return config;
-    } catch (error) {
-      console.error('Authentication error:', error);
-      return Promise.reject(error);
-    }
-  }
-
-  handleRequestError = (error) => {
-    console.error('Request failed:', error.message);
-    return Promise.reject({
-      message: 'Failed to send request',
-      originalError: error
-    });
-  };
-
   handleResponse(response) {
     return response.data;
   }
 
-  handleResponseError = (error) => {
-    const customError = {
-      message: error.response?.data?.message || 'An unexpected error occurred',
-      status: error.response?.status,
-      data: error.response?.data,
-    };
-    
-    console.error('API Error:', customError);
-    return Promise.reject(customError);
-  };
+  handleResponseError(error) {
+    return Promise.reject(error);
+  }
 
   async get(url, params = {}) {
     return this.client.get(url, { params });

@@ -47,7 +47,7 @@ const Artikli = () => {
         onSearch={handleSearch}
         placeholder="Pretraži artikle..."
       />
-      {articles.length > 0 ? (
+      {articles?.length > 0 ? (
         <Table 
           title="Popis Artikala"
           headers={TABLE_HEADERS}

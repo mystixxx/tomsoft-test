@@ -4,7 +4,11 @@ import { API_CONFIG } from '../config/apiConfig';
 class ApiClient {
   constructor() {
     this.client = axios.create({
-      baseURL: API_CONFIG.BASE_URL
+      baseURL: API_CONFIG.BASE_URL,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
 
     this.initializeInterceptors();
@@ -38,17 +42,28 @@ class ApiClient {
     }
   }
 
-  handleRequestError(error) {
-    return Promise.reject(error);
-  }
+  handleRequestError = (error) => {
+    console.error('Request failed:', error.message);
+    return Promise.reject({
+      message: 'Failed to send request',
+      originalError: error
+    });
+  };
 
   handleResponse(response) {
     return response.data;
   }
 
-  handleResponseError(error) {
-    return Promise.reject(error);
-  }
+  handleResponseError = (error) => {
+    const customError = {
+      message: error.response?.data?.message || 'An unexpected error occurred',
+      status: error.response?.status,
+      data: error.response?.data,
+    };
+    
+    console.error('API Error:', customError);
+    return Promise.reject(customError);
+  };
 
   async get(url, params = {}) {
     return this.client.get(url, { params });
